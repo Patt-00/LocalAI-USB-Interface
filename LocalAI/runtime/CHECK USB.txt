@@ -111,12 +111,10 @@ after the user approves it and explicitly requests the network action.
 
 SECURITY AND PRIVACY
 --------------------
-Every desktop start generates a new 32-byte API key in private temporary state.
-The key is passed by API-key file, not exposed in the server command line, is
-bootstrapped through a URL fragment, and is immediately removed from browser
-history. The raw agent-tool endpoint returns HTTP 401 without that key. All
-servers bind to loopback, never 0.0.0.0. Normal chat/inference is offline and no
-cloud API, account, telemetry, or API key from an external service is required.
+No platform requires an API key or authenticated browser link. All servers bind
+to loopback, never 0.0.0.0. Android agent mutations additionally require the
+exact same localhost browser origin. Normal chat/inference is offline and no
+cloud API, account, or telemetry is required.
 PID plus process identity/command checks ensure STOP targets only the server
 created by this USB. POSIX servers use nohup and redirected input/output so they
 remain safe when a launcher terminal closes.
@@ -126,10 +124,10 @@ UI BUILD AND STATIC VALIDATION - PASS
 - Focused client tests: 13/13 (7 agent context/auth tests, 6 DOCX tests).
 - Svelte diagnostics: 0 errors and 0 warnings.
 - ESLint for the final changed source/tests: PASS.
-- Production static build and portable authenticated bundle postprocess: PASS.
+- Production static build and portable normal-module loader validation: PASS.
 - Eight platform bundle aliases are byte-identical; final JS SHA-256:
   6d826d9545064f11cfdfbc4c92c72ff1e53d5f9970c2418da5d1051dc174d024
-- Service-worker precaching is disabled to avoid stale protected assets/keys.
+- Service-worker precaching is disabled to avoid stale interface assets.
 - All Bash/macOS/Termux scripts pass bash syntax validation.
 - Both Windows batch launchers contain only CRLF line endings.
 - No launcher contains a Fedora mount path, username, fixed drive letter,
@@ -140,9 +138,9 @@ UI BUILD AND STATIC VALIDATION - PASS
 FEDORA FINAL END-TO-END TEST - PASS
 -----------------------------------
 1. START AI.sh selected the USB Linux x86-64 Vulkan runtime and 4096 context.
-2. The authenticated router listened only on 127.0.0.1:8080.
-3. /health returned HTTP 200; /tools returned 401 without the per-run key and
-   200 with it.
+2. The router listened only on 127.0.0.1:8080.
+3. /props, the UI bundle, and /v1/chat/completions returned HTTP 200 without an
+   API key.
 4. The one shared Qwen3 8B Q4_K_M GGUF loaded with n_ctx_slot=4096.
 5. Direct mode returned exactly: QWEN3 8B USB OK
 6. Native function calling returned finish_reason=tool_calls and requested

@@ -13,16 +13,15 @@ QUICK START FOR AN ALREADY-CONFIGURED REDMI
 
      ~/localai-start
 
-5. Wait for "LOCAL AI READY". The authenticated LocalAI page should open.
+5. Wait for "LOCAL AI READY". The LocalAI page should open.
 6. When finished, return to Termux and run:
 
      ~/localai-stop
 
 7. Wait for "It is safe to disconnect the USB", then eject/unplug it.
 
-Do not browse directly to a plain localhost page. Always use ~/localai-start;
-it opens a fresh authenticated link. A plain or old link can show a white
-screen, HTTP 403, HTTP 404, or Access Denied.
+Always use ~/localai-start so the model and agent bridge are ready before the
+browser opens. The launcher now uses a normal localhost link without an API key.
 
 
 1. WHAT THIS ANDROID VERSION DOES
@@ -190,8 +189,8 @@ installation tracked. Do not unplug while it says the server is still running.
 8. IF THE BROWSER DOES NOT OPEN OR SHOWS WHITE/403/404
 ------------------------------------------------------
 - Return to Termux and run ~/localai-start again. If LocalAI is already
-  running, this safely reopens a fresh authenticated browser link.
-- Do not manually reuse an old URL, API token, bookmark, or raw localhost page.
+  running, this safely reopens the normal localhost page.
+- Close old LocalAI tabs before retrying so Android does not reuse failed assets.
 - Close stale LocalAI browser tabs and use the newly opened tab.
 - Check current status in Termux:
 
@@ -207,7 +206,7 @@ installation tracked. Do not unplug while it says the server is still running.
      ~/localai-stop
      ~/localai-start
 
-Port 8080 is the authenticated interface/agent bridge. Port 8081 is the private
+Port 8080 is the loopback-only interface/agent bridge. Port 8081 is the private
 llama-server behind it. Do not use port 8081 as the chat website.
 
 
@@ -325,8 +324,8 @@ It cannot:
   and make sure the selected model fits available RAM. Check llama-server.log.
 
 "Template endpoint returned HTTP 403" / "Access Denied"
-  The browser tab has an old/missing session token. Run ~/localai-start again
-  and use the newly opened tab.
+  This is normally a stale tab from an older API-key build. Close old LocalAI
+  tabs, run ~/localai-start again, and use the newly opened page.
 
 HTTP 404 or white page
   The bridge may be stopped, still loading, or the wrong URL/port was opened.
@@ -360,8 +359,8 @@ launchers in Termux. It does not copy or alter the GGUF model.
 - Inference stays on the Redmi unless you deliberately add an external network
   tool or upload information elsewhere.
 - The local server listens only on 127.0.0.1.
-- The API/session token only protects the local browser/agent session. Do not
-  publish or reuse it; each launch manages its own session.
+- No API key, account, or authenticated browser link is required. Android agent
+  changes accept only exact same-origin requests from the localhost interface.
 - Agent commands can delete or overwrite files that Termux can access. Keep
   approval enabled for unfamiliar models and maintain backups of important data.
 - Always stop LocalAI before ejecting the USB.

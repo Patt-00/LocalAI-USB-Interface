@@ -83,7 +83,7 @@ if [ -f "$PIDFILE" ]; then
     done
     kill -0 "$server_pid" 2>/dev/null && fail "The tracked web server did not stop cleanly."
   fi
-  rm -f "$PIDFILE" "$WEB_WORK_BASE/api-key"
+  rm -f "$PIDFILE"
 fi
 
 RUN_RUNTIME="$RUNTIME"

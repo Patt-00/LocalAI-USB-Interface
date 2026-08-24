@@ -53,9 +53,10 @@ Normal offline use
 
      ~/localai-stop
 
-The private llama-server listens only on 127.0.0.1:8081. A small authenticated
-bridge serves the UI/API on 127.0.0.1:8080, supplies the Android-compatible file
-and shell tools, and safely owns/stops only the llama-server it created.
+The private llama-server listens only on 127.0.0.1:8081. A small loopback-only
+bridge serves the UI/API on 127.0.0.1:8080 without an API key, supplies the
+Android-compatible file and shell tools, and safely owns/stops only the
+llama-server it created.
 
 Agent permissions
 -----------------

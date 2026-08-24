@@ -8,8 +8,6 @@ LocalAI/cache/
 *.log
 .env
 .env.*
-api-key
-session.token
 server.pid
 process.json
 

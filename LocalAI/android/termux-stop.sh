@@ -6,7 +6,6 @@ RUNTIME="$BASE/runtime"
 BRIDGE="$BASE/bin/localai-agent"
 STATE="$BASE/state"
 PROCESS_FILE="$STATE/process.json"
-TOKEN_FILE="$STATE/session.token"
 URL="http://127.0.0.1:8080"
 
 json_pid() {
@@ -24,7 +23,6 @@ process_matches() {
 
 bridge_pid="$(json_pid bridge_pid)"
 llama_pid="$(json_pid llama_pid)"
-token="$(sed -n '1p' "$TOKEN_FILE" 2>/dev/null || true)"
 
 if [ -z "$bridge_pid" ] && [ -z "$llama_pid" ]; then
   echo "No LOCAL AI process is tracked."
@@ -32,9 +30,9 @@ if [ -z "$bridge_pid" ] && [ -z "$llama_pid" ]; then
   exit 0
 fi
 
-if [ -n "$token" ] && command -v curl >/dev/null 2>&1; then
+if command -v curl >/dev/null 2>&1; then
   curl --max-time 3 -sS -o /dev/null -X POST "$URL/api/shutdown" \
-    -H "Authorization: Bearer $token" 2>/dev/null || true
+    -H "Origin: $URL" 2>/dev/null || true
 fi
 
 i=0
@@ -44,7 +42,7 @@ while [ "$i" -lt 120 ] && process_matches "$bridge_pid" "$BRIDGE"; do
 done
 
 if process_matches "$bridge_pid" "$BRIDGE"; then
-  echo "Authenticated shutdown did not finish; sending TERM to the tracked bridge." >&2
+  echo "Local shutdown did not finish; sending TERM to the tracked bridge." >&2
   kill -TERM "$bridge_pid" 2>/dev/null || true
   i=0
   while [ "$i" -lt 80 ] && process_matches "$bridge_pid" "$BRIDGE"; do
@@ -76,6 +74,5 @@ if process_matches "$bridge_pid" "$BRIDGE" || process_matches "$llama_pid" "$RUN
 fi
 
 [ -e "$PROCESS_FILE" ] && unlink "$PROCESS_FILE" 2>/dev/null || true
-[ -e "$TOKEN_FILE" ] && unlink "$TOKEN_FILE" 2>/dev/null || true
 command -v termux-wake-unlock >/dev/null 2>&1 && termux-wake-unlock >/dev/null 2>&1 || true
 echo "LOCAL AI stopped. It is safe to disconnect the USB."

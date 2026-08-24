@@ -13,7 +13,6 @@ PIDFILE="$WORK_BASE/server.pid"
 LOG="$WORK_BASE/server.log"
 PRESETFILE="$WORK_BASE/device-models.ini"
 CACHE_DIR="$WORK_BASE/cache"
-TOKENFILE="$WORK_BASE/api-key"
 
 fail() {
     printf '\nERROR: %s\n' "$1" >&2
@@ -23,13 +22,9 @@ fail() {
 }
 
 open_ui() {
-    ui_key="$(sed -n '1p' "$TOKENFILE" 2>/dev/null || true)"
-    case "$ui_key" in
-        *[!0-9A-Fa-f]*|'') ui_url="$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE" ;;
-        *) ui_url="$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE#apiKey=$ui_key" ;;
-    esac
-    printf '\nAuthenticated browser link:\n%s\n' "$ui_url"
-    printf 'Copy the entire link above if the browser does not open automatically.\n'
+    ui_url="$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE"
+    printf '\nBrowser link:\n%s\n' "$ui_url"
+    printf 'Copy the link above if the browser does not open automatically.\n'
     command -v xdg-open >/dev/null 2>&1 && xdg-open "$ui_url" >/dev/null 2>&1 &
 }
 
@@ -102,16 +97,9 @@ if [ -f "$PIDFILE" ]; then
     if [ -n "$oldpid" ] && kill -0 "$oldpid" 2>/dev/null && \
        [ -n "$oldstart" ] && [ "$actual_start" = "$oldstart" ] && \
        tr '\0' ' ' < "/proc/$oldpid/cmdline" 2>/dev/null | grep -Fq -- "$MODEL_DIR"; then
-        oldkey="$(sed -n '1p' "$TOKENFILE" 2>/dev/null || true)"
-        case "$oldkey" in
-            *[!0-9A-Fa-f]*|'') fail "LOCAL AI is running but its private API key is missing or invalid. Run STOP AI.sh, then start again." ;;
-            *)
-                [ "${#oldkey}" -eq 64 ] || fail "LOCAL AI is running but its private API key is invalid. Run STOP AI.sh, then start again."
-                echo "LOCAL AI is already running (PID $oldpid)."
-                open_ui
-                exit 0
-                ;;
-        esac
+        echo "LOCAL AI is already running (PID $oldpid)."
+        open_ui
+        exit 0
     fi
     rm -f -- "$PIDFILE"
 fi
@@ -119,10 +107,6 @@ fi
 umask 077
 mkdir -p -- "$WORK_BASE" "$CACHE_DIR" || fail "Could not create the private runtime directory."
 chmod 700 -- "$WORK_BASE" || fail "Could not secure the private runtime directory."
-API_KEY="$(LC_ALL=C od -An -N32 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')"
-[ "${#API_KEY}" -eq 64 ] || fail "Could not generate the private local API key."
-printf '%s\n' "$API_KEY" > "$TOKENFILE" || fail "Could not store the private local API key."
-chmod 600 -- "$TOKENFILE" || fail "Could not secure the private local API key."
 printf 'version = 1\n\n[*]\n' > "$PRESETFILE" || fail "Could not create the device model list."
 printf 'ctx-size = %s\n' "$CTX_SIZE" >> "$PRESETFILE"
 if [ "$GPU_BACKEND" = "CPU" ]; then
@@ -210,7 +194,7 @@ LOCALAI_LIBRARY_PATH="$RUN_RUNTIME${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
         --models-dir "$MODEL_DIR" --models-preset "$PRESETFILE" \
         --models-max 1 --models-autoload --parallel 1 \
         --cache-ram 256 --no-cache-idle-slots \
-        --host 127.0.0.1 --port 8080 --api-key-file "$TOKENFILE" --context-shift \
+        --host 127.0.0.1 --port 8080 --context-shift \
         --jinja --reasoning off --reasoning-format deepseek \
         --tools all --path "$WEB" --ui-config-file "$WEB/ui-config.json"
 ) </dev/null >"$LOG" 2>&1 &
@@ -228,17 +212,16 @@ stop_failed_start() {
     kill -0 "$server_pid" 2>/dev/null && kill -KILL "$server_pid" 2>/dev/null || true
     wait "$server_pid" 2>/dev/null || true
     rm -f -- "$PIDFILE"
-    rm -f -- "$TOKENFILE"
 }
 
 check_ready() {
     if command -v curl >/dev/null 2>&1; then
-        curl -fsS --max-time 1 -H "Authorization: Bearer $API_KEY" "$URL/props" >/dev/null 2>&1
+        curl -fsS --max-time 1 "$URL/props" >/dev/null 2>&1
     elif command -v wget >/dev/null 2>&1; then
-        wget -q -T 1 --header="Authorization: Bearer $API_KEY" -O /dev/null "$URL/props" >/dev/null 2>&1
+        wget -q -T 1 -O /dev/null "$URL/props" >/dev/null 2>&1
     else
         exec 3<>/dev/tcp/127.0.0.1/8080 2>/dev/null || return 1
-        printf 'GET /props HTTP/1.0\r\nHost: 127.0.0.1\r\nAuthorization: Bearer %s\r\n\r\n' "$API_KEY" >&3
+        printf 'GET /props HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n' >&3
         IFS= read -r -t 1 status <&3 || true
         exec 3<&- 3>&-
         case "$status" in *' 200 '*) return 0;; *) return 1;; esac
@@ -250,7 +233,6 @@ for _ in $(seq 1 300); do
     if ! kill -0 "$server_pid" 2>/dev/null; then
         tail -n 30 "$LOG" >&2
         rm -f -- "$PIDFILE"
-        rm -f -- "$TOKENFILE"
         fail "llama-server exited before becoming ready. Port 8080 may already be in use."
     fi
     if check_ready; then

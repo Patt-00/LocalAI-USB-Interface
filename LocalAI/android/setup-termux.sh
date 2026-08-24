@@ -43,6 +43,7 @@ WEB_DEST="$BASE/web"
 MODEL="$(localai_select_default_model "$MODEL_DIR")" || MODEL=""
 
 mkdir -p "$RUNTIME_DEST" "$BIN_DEST" "$WEB_DEST" "$BASE/state" || exit 1
+[ -e "$BASE/state/session.token" ] && unlink "$BASE/state/session.token" 2>/dev/null || true
 cp -RL "$RUNTIME_SOURCE/." "$RUNTIME_DEST/" || {
   echo "Could not copy the small runtime into Termux private storage." >&2
   exit 1

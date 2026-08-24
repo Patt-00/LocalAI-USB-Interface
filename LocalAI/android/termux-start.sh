@@ -14,7 +14,6 @@ MODEL_SELECTOR="$BASE/bin/model-selection.sh"
 WEB="$BASE/web"
 STATE="$BASE/state"
 PROCESS_FILE="$STATE/process.json"
-TOKEN_FILE="$STATE/session.token"
 BRIDGE_LOG="$BASE/agent-bridge.log"
 LLAMA_LOG="$BASE/llama-server.log"
 URL="http://127.0.0.1:8080"
@@ -45,12 +44,7 @@ bridge_matches() {
 }
 
 open_agent() {
-  token="$(sed -n '1p' "$TOKEN_FILE" 2>/dev/null || true)"
-  case "$token" in
-    [0-9a-f][0-9a-f]*) ;;
-    *) echo "Agent session token is unavailable." >&2; return 1 ;;
-  esac
-  launch_url="$URL/localai-agent-start?session=$(date +%s)#token=$token"
+  launch_url="$URL/?launch=$(date +%s)"
   /system/bin/am start -a android.intent.action.VIEW -d "$launch_url" >/dev/null 2>&1 || {
     echo "Open $launch_url in the Android browser." >&2
     return 1
@@ -149,9 +143,8 @@ while [ "$i" -lt 600 ]; do
 done
 
 if [ "$ready" != yes ]; then
-  token="$(sed -n '1p' "$TOKEN_FILE" 2>/dev/null || true)"
-  [ -n "$token" ] && curl --max-time 3 -sS -o /dev/null -X POST "$URL/api/shutdown" \
-    -H "Authorization: Bearer $token" 2>/dev/null || true
+  curl --max-time 3 -sS -o /dev/null -X POST "$URL/api/shutdown" \
+    -H "Origin: $URL" 2>/dev/null || true
   echo "LOCAL AI did not become ready. Recent bridge log:" >&2
   tail -n 25 "$BRIDGE_LOG" 2>/dev/null || true
   echo "Recent llama-server log:" >&2

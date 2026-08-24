@@ -14,12 +14,10 @@ STATEFILE="$WORK_BASE/runtime-path.txt"
 LOG="$WORK_BASE/server.log"
 PRESETFILE="$WORK_BASE/device-models.ini"
 CACHE_DIR="$WORK_BASE/cache"
-TOKENFILE="$WORK_BASE/api-key"
 
 fail() { echo; echo "ERROR: $1" >&2; echo "See: $LOG" >&2; read -r -p "Press Return to close..." _; exit 1; }
 open_ui() {
-  ui_key="$(sed -n '1p' "$TOKENFILE" 2>/dev/null || true)"
-  case "$ui_key" in *[!0-9A-Fa-f]*|'') open "$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE";; *) open "$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE#apiKey=$ui_key";; esac
+  open "$URL/?launch=$(date +%s)&bundle=$UI_BUNDLE"
 }
 GPU_BACKEND="CPU"
 GPU_DEVICE=""
@@ -60,13 +58,7 @@ if [ -f "$PIDFILE" ]; then
   actual_start="$(ps -p "$oldpid" -o lstart= 2>/dev/null || true)"
   if [ -n "$oldpid" ] && kill -0 "$oldpid" 2>/dev/null && [ -n "$oldstart" ] && \
      [ "$actual_start" = "$oldstart" ] && ps -ww -p "$oldpid" -o command= | grep -Fq -- "$MODEL_DIR"; then
-    oldkey="$(sed -n '1p' "$TOKENFILE" 2>/dev/null || true)"
-    case "$oldkey" in
-      *[!0-9A-Fa-f]*|'') fail "LOCAL AI is running but its private API key is missing or invalid. Run STOP AI.command, then start again." ;;
-      *)
-        [ "${#oldkey}" -eq 64 ] || fail "LOCAL AI is running but its private API key is invalid. Run STOP AI.command, then start again."
-        echo "LOCAL AI is already running (PID $oldpid)."; open_ui; exit 0 ;;
-    esac
+    echo "LOCAL AI is already running (PID $oldpid)."; open_ui; exit 0
   fi
   rm -f -- "$PIDFILE"
 fi
@@ -74,10 +66,6 @@ fi
 umask 077
 mkdir -p "$WORK_BASE" "$CACHE_DIR" || fail "Cannot create a private runtime directory."
 chmod 700 "$WORK_BASE" || fail "Cannot secure the private runtime directory."
-API_KEY="$(LC_ALL=C od -An -N32 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')"
-[ "${#API_KEY}" -eq 64 ] || fail "Could not generate the private local API key."
-printf '%s\n' "$API_KEY" > "$TOKENFILE" || fail "Could not store the private local API key."
-chmod 600 "$TOKENFILE" || fail "Could not secure the private local API key."
 printf 'version = 1\n\n[*]\n' > "$PRESETFILE" || fail "Cannot create the device model list."
 printf 'ctx-size = %s\n' "$CTX_SIZE" >> "$PRESETFILE"
 if [ "$GPU_BACKEND" = "CPU" ]; then
@@ -162,7 +150,7 @@ printf '%s\n' "$RUN_RUNTIME" > "$STATEFILE"
     --models-dir "$MODEL_DIR" --models-preset "$PRESETFILE" \
     --models-max 1 --models-autoload --parallel 1 \
     --cache-ram 256 --no-cache-idle-slots \
-    --host 127.0.0.1 --port 8080 --api-key-file "$TOKENFILE" --context-shift \
+    --host 127.0.0.1 --port 8080 --context-shift \
     --jinja --reasoning off --reasoning-format deepseek \
     --tools all --path "$WEB" --ui-config-file "$WEB/ui-config.json"
 ) </dev/null >"$LOG" 2>&1 &
@@ -180,14 +168,13 @@ stop_failed_start() {
   kill -0 "$server_pid" 2>/dev/null && kill -KILL "$server_pid" 2>/dev/null || true
   wait "$server_pid" 2>/dev/null || true
   rm -f "$PIDFILE"
-  rm -f "$TOKENFILE"
 }
 
 ready=0
 i=0
 while [ "$i" -lt 300 ]; do
-  kill -0 "$server_pid" 2>/dev/null || { tail -n 30 "$LOG"; rm -f "$PIDFILE" "$TOKENFILE"; fail "llama-server exited before becoming ready."; }
-  if curl -fsS --max-time 1 -H "Authorization: Bearer $API_KEY" "$URL/props" >/dev/null 2>&1; then ready=1; break; fi
+  kill -0 "$server_pid" 2>/dev/null || { tail -n 30 "$LOG"; rm -f "$PIDFILE"; fail "llama-server exited before becoming ready."; }
+  if curl -fsS --max-time 1 "$URL/props" >/dev/null 2>&1; then ready=1; break; fi
   i=$((i + 1)); sleep 1
 done
 [ "$ready" -eq 1 ] || { stop_failed_start; fail "Timed out waiting for llama-server readiness. The server was stopped."; }

@@ -5,10 +5,10 @@ The same GGUF model is shared by Windows, macOS, Linux, and Android/Termux.
 Each operating system uses its own llama.cpp runtime. The USB stores the model;
 the connected device's CPU/GPU and RAM perform the calculations.
 
-Normal chat and agent work are fully local. Desktop servers listen only on
-127.0.0.1:8080 and use a new private API key for every run. No account, cloud
-API, or Internet connection is required. Never remove the USB while LocalAI is
-running; use the matching STOP launcher first.
+Normal chat and agent work are fully local. Every server listens only on
+127.0.0.1:8080. No account, API key, cloud API, or Internet connection is
+required. Never remove the USB while LocalAI is running; use the matching STOP
+launcher first.
 
 QUICK START
 -----------
@@ -120,9 +120,9 @@ Always-allow choices are stored in that device's browser and can be revoked in
 Tools settings. Read commands and file changes before approving them. The model
 is instructed to ask again for destructive, irreversible, credential, or
 privacy-sensitive actions, but model instructions are not a security boundary.
-The per-run API key protects the raw localhost tool endpoint from unauthenticated
-web pages. A local process already running as the same user has equivalent OS
-access and may be able to inspect that user's private temporary state.
+Agent mutations accept requests only from the exact same loopback browser origin.
+A local process already running as the same user has equivalent OS access. Never
+change the launchers to bind LocalAI to a LAN address such as 0.0.0.0.
 
 FILES AND DOCUMENTS
 -------------------

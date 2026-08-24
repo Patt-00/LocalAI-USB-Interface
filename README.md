@@ -68,7 +68,7 @@ For a vision model, place its matching `mmproj` file beside the main GGUF.
 2. Open the USB in File Explorer.
 3. Double-click `START AI.bat`.
 4. Wait for `LOCAL AI READY` and the browser to open.
-5. Chat at the authenticated local page.
+5. Chat at the local page. No API key is required.
 6. Before ejecting the USB, double-click `STOP AI.bat`.
 
 The launcher selects Windows x64 or ARM64 automatically. GPU acceleration can
@@ -274,9 +274,8 @@ Every time you use LocalAI:
 
 Wait for `It is safe to disconnect the USB` before removing it.
 
-Do not open a plain `localhost:8080` bookmark. `~/localai-start` opens a fresh,
-authenticated page. A plain or stale link can show a white screen, HTTP 403,
-HTTP 404, or Access Denied.
+Use `~/localai-start` so the model and bridge are ready before the browser opens.
+It now opens a normal localhost page without an API key or authenticated link.
 
 ## Select a specific Android model
 
@@ -345,7 +344,7 @@ Close stale LocalAI tabs and run:
 ~/localai-start
 ```
 
-If LocalAI is already running, this reopens a fresh authenticated tab.
+If LocalAI is already running, this reopens the local page.
 
 Check the local bridge:
 
@@ -353,8 +352,8 @@ Check the local bridge:
 curl -s http://127.0.0.1:8080/api/status
 ```
 
-Port 8080 is the authenticated interface. Port 8081 is the private llama-server
-behind it and is not the chat website.
+Port 8080 is the loopback-only interface. Port 8081 is the private llama-server
+behind it and is not the chat website. Neither requires an API key.
 
 ### Model fails to load or Android closes Termux
 
