@@ -125,8 +125,8 @@ UI BUILD AND STATIC VALIDATION - PASS
 - Svelte diagnostics: 0 errors and 0 warnings.
 - ESLint for the final changed source/tests: PASS.
 - Production static build and portable normal-module loader validation: PASS.
-- Eight platform bundle aliases are byte-identical; final JS SHA-256:
-  6d826d9545064f11cfdfbc4c92c72ff1e53d5f9970c2418da5d1051dc174d024
+- Ten platform/default bundle copies are byte-identical; final JS SHA-256:
+  1025b735bda7f88fdfbff1ddb6caf5c1516908a54c78fcea154baf223918d3f6
 - Service-worker precaching is disabled to avoid stale interface assets.
 - All Bash/macOS/Termux scripts pass bash syntax validation.
 - Both Windows batch launchers contain only CRLF line endings.
