@@ -1,0 +1,178 @@
+LOCALAI USB - FINAL VERIFICATION
+================================
+Built and verified: 2026-08-24T19:42:58+08:00 (Asia/Manila)
+Finished path: /run/media/patt/LOCALAI (Fedora build-host path only)
+
+USB SAFETY AND STORAGE
+----------------------
+Mounted source: /dev/sdb1
+Parent device: /dev/sdb
+Removable/transport: yes; RM=1; USB
+Filesystem: exFAT
+Total filesystem capacity: 8,048,869,376 bytes
+Initial free space before the original build: 8,048,771,072 bytes
+Final free space: 1411284992 bytes
+Final logical USB tree size: 6621201149 bytes
+The drive was never formatted. /dev/sda was not modified. Unrelated USB files
+were preserved. More than several hundred MB remains free.
+
+ONE SHARED MODEL
+----------------
+Source: Ollama Library qwen3:8b (Qwen3 8B)
+File: LocalAI/models/qwen3-8b-q4_K_M.gguf
+Quantization: Q4_K_M
+Size: 5,225,374,496 bytes
+Final verified SHA-256: a3de86cd1c132c822487ededd47a324c50491393e6565cd14bafa40d0b8e686f
+GGUF files on the USB: exactly 1
+Windows, macOS, Linux, and Android/Termux all reference this same file. No
+platform-specific model copy exists.
+
+LLAMA.CPP
+---------
+Official repository: ggml-org/llama.cpp
+Official release build: b10516
+Commit: b95502ba9aa0eb73a2f4fc8878d7fbe6a847a0b9
+Runtime version: 0.1.2-dev, build 10516
+Context: 4096 default; customizable per device from 512 to 131072 tokens
+Model concurrency: one loaded model and one generation slot
+Secondary prompt cache: 256 MiB maximum; idle-slot caching disabled
+Chat template: model-embedded Qwen Jinja template
+Fast default: Qwen thinking off; the website Reasoning control explicitly
+enables Qwen thinking with the correct enable_thinking template argument.
+GPU control: Settings > General > GPU acceleration. The saved per-device choice
+rewrites the active preset and reloads the model without changing the GGUF.
+Desktop launchers remember the choice and retain automatic CPU fallback.
+Android/Termux is CPU-only.
+Context control: Settings > General > Context size (tokens). Desktop changes
+reload the active model; Android/Termux applies the saved value on its next
+start. Launchers validate the saved 512-131072 range and fall back to 4096.
+Server address: 127.0.0.1:8080 only
+
+RUNTIME STATUS
+--------------
+Windows x86-64: INCLUDED. Official CPU, CUDA 13.3, and Vulkan backends plus the
+required llama.cpp/Microsoft/NVIDIA runtime DLL closure are bundled together.
+START AI.bat probes the actual backend, preferring CUDA for NVIDIA, then Vulkan
+for a compatible AMD/Intel GPU, with automatic CPU fallback.
+Windows ARM64: INCLUDED. Official ARM64 CPU build, Qualcomm Adreno OpenCL
+backend, and required DLL closure are bundled. The launcher probes OpenCL and
+falls back to CPU; the wrong-architecture VCRUNTIME140_1.dll is not present.
+macOS Apple Silicon ARM64: INCLUDED. Official runtime with Metal support and
+automatic native Apple Silicon selection, including under Rosetta.
+macOS Intel x86-64: INCLUDED. Official CPU/BLAS runtime.
+Linux x86-64: INCLUDED. Official CPU and Vulkan runtimes with bundled
+non-system library closures. The launcher automatically uses supported
+discrete GPUs and otherwise falls back to CPU. It requires glibc 2.34 or newer.
+Linux ARM64: INCLUDED. Official CPU and Vulkan runtimes with bundled non-system
+library closures. The launcher probes Vulkan and falls back to CPU. It requires
+glibc 2.38 or newer.
+Android ARM64: INCLUDED. Official Android 28+ CPU llama-server and its stripped
+15-file dependency closure are in LocalAI/android-arm64 (27,248,094 bytes).
+Android APK: REMOVED by user direction. No APK exists anywhere on this USB.
+Android Termux fallback: INCLUDED. The custom ARM64 loopback agent bridge,
+official llama.cpp runtime installer, start/stop scripts, and instructions are
+in LocalAI/android. The 5.2 GB model is never silently copied to the phone.
+
+OFFICIAL LLAMA.CPP ARCHIVE SHA-256 DIGESTS
+-----------------------------------------
+Windows x64: fbbbc55e0eb2e1b07f9dcb9488616c98ed47d9003b90e15e7c8c7812c4307cd3
+Windows x64 CUDA 13.3: 462fc1b2eddb78b594a93867778a1a0cb15a39f0c0b16e9337f0b56ca7aa25f9
+Windows CUDA 13.3 DLLs: 1462a050eb4c684921ba51dcc4cc488a036674c3e73e9945ee705b854808d03e
+Windows x64 Vulkan: 530f57d2a874ce017827c1e5a926812b9d5de4667248575d1372b1c0acf94d83
+Windows ARM64: 4b136692ab17009722e350d5bb8e5905f9af6bcd43d2897f0655186a9cc65db6
+Windows ARM64 OpenCL Adreno: eaf04f7a74c3e82d5a3cbd08dd56325ccd906519a15e45b68947c230111f4290
+macOS ARM64: ee3324327d621026ae80c24031670e65fa62a0b23a3a027dbe2f65f240affd30
+macOS x64: b7adecf7bd2cde577ddabee8357a72409165d8104f43b4acee9f1b98cc9c447a
+Linux x64: f263a91280471b4c33c4999d7c76259c0f3a0a53a0b3e692b2c0b84380137a35
+Linux x64 Vulkan: 5ce186720f43c415465869b0cd93973b828b219cbf6fbcc22aa899531973c505
+Linux ARM64: e7491dca79c9799fc3ae169675a79f5777d3027e31ffb08ae679e5e0a7ae3c97
+Linux ARM64 Vulkan: 760c434827e76342f1d2cf9d1e48b318e7805e7965587ffdbc324b516d955510
+Android ARM64: 1d2f78c13ec4a6197506288ba0aa0853d71c1b3048ff771ea37791be7f591cc6
+
+PORTABLE DESKTOP AGENT
+----------------------
+The official llama.cpp website was extended and built locally to provide:
+- read, recursive file search, text search, shell, write, and exact-edit tools;
+- access to all files the signed-in OS user can legitimately access;
+- Allow once, Always allow this tool, Always allow all Server Tools, and Deny;
+- working-directory selection and alternate compatible GGUF discovery from
+  LocalAI-Models, Desktop, and Downloads without copying those models;
+- PDF text, DOCX text, text/source uploads, local chat history, and automatic
+  semantic compaction of older agent turns while retaining full local history;
+- one-model-at-a-time routing, performance-oriented defaults, and no background
+  indexer or additional always-on service.
+
+Access never bypasses root, sudo, UAC, Gatekeeper, Android app isolation,
+encryption, permissions, or policy. The included Qwen3 model is text-only.
+Images require a compatible vision GGUF plus its matching mmproj. Scanned PDFs
+require OCR or a compatible vision model. No dependable lightweight web-search
+backend is bundled; an installed command such as curl can use the Internet only
+after the user approves it and explicitly requests the network action.
+
+SECURITY AND PRIVACY
+--------------------
+Every desktop start generates a new 32-byte API key in private temporary state.
+The key is passed by API-key file, not exposed in the server command line, is
+bootstrapped through a URL fragment, and is immediately removed from browser
+history. The raw agent-tool endpoint returns HTTP 401 without that key. All
+servers bind to loopback, never 0.0.0.0. Normal chat/inference is offline and no
+cloud API, account, telemetry, or API key from an external service is required.
+PID plus process identity/command checks ensure STOP targets only the server
+created by this USB. POSIX servers use nohup and redirected input/output so they
+remain safe when a launcher terminal closes.
+
+UI BUILD AND STATIC VALIDATION - PASS
+-------------------------------------
+- Focused client tests: 13/13 (7 agent context/auth tests, 6 DOCX tests).
+- Svelte diagnostics: 0 errors and 0 warnings.
+- ESLint for the final changed source/tests: PASS.
+- Production static build and portable authenticated bundle postprocess: PASS.
+- Eight platform bundle aliases are byte-identical; final JS SHA-256:
+  6d826d9545064f11cfdfbc4c92c72ff1e53d5f9970c2418da5d1051dc174d024
+- Service-worker precaching is disabled to avoid stale protected assets/keys.
+- All Bash/macOS/Termux scripts pass bash syntax validation.
+- Both Windows batch launchers contain only CRLF line endings.
+- No launcher contains a Fedora mount path, username, fixed drive letter,
+  /dev/sd device, or 0.0.0.0 binding.
+- Main PE, Mach-O, ELF, and Android ELF headers match their claimed platforms.
+- No exFAT-incompatible symlink remains on the USB.
+
+FEDORA FINAL END-TO-END TEST - PASS
+-----------------------------------
+1. START AI.sh selected the USB Linux x86-64 Vulkan runtime and 4096 context.
+2. The authenticated router listened only on 127.0.0.1:8080.
+3. /health returned HTTP 200; /tools returned 401 without the per-run key and
+   200 with it.
+4. The one shared Qwen3 8B Q4_K_M GGUF loaded with n_ctx_slot=4096.
+5. Direct mode returned exactly: QWEN3 8B USB OK
+6. Native function calling returned finish_reason=tool_calls and requested
+   get_info with valid empty-object arguments.
+7. Vulkan partial offload used about 1,426 MiB of NVIDIA MX110 VRAM; remaining
+   layers used CPU/RAM. Generation measured about 1.46 tokens/second.
+8. Initial model loading took about 8 minutes 26 seconds because this flash
+   drive read the 5.2 GB GGUF slowly; subsequent inference completed normally.
+9. All updated Linux, macOS, and Termux shell launchers passed syntax checks;
+   Windows uses the same filename and fixed 4096 context.
+10. STOP AI.sh removed the tracked router and child model server. No PID record,
+    llama-server process, or listener on ports 8080/8081 remains.
+11. The website GPU acceleration toggle was exercised off and on. It persisted
+    the per-device choice, rewrote the active preset, reloaded model presets,
+    and reported the selected CPU/Vulkan mode in the interface.
+12. The context control was exercised at 8192 and restored to 4096. The actual
+    llama.cpp child command and model log confirmed n_ctx_slot=8192, followed
+    by n_ctx_slot=4096 after restoring the safe default.
+
+ANDROID DEVICE STATUS
+---------------------
+Redmi Turbo 4 (24129RT7CC): connected during final audit; old com.localai.usb
+APK package is absent. The official Android runtime and Termux bridge were
+previously smoke-tested as ARM64 Android executables.
+Xiaomi Pad: not connected/reachable during cleanup, so any old APK installed on
+that tablet could not be removed remotely. This USB contains no APK and all new
+Android use is Termux-only.
+
+FINISHED
+--------
+USB root: /run/media/patt/LOCALAI
+Run README.txt for platform instructions. Always run the matching STOP launcher
+before unplugging/ejecting the drive.
