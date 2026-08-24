@@ -1,0 +1,5 @@
+No GGUF is stored in this interface repository.
+
+Place a llama.cpp-compatible primary GGUF in this directory. If there are
+multiple models, write the preferred relative path on the first line of
+default-model.txt. The launchers fall back automatically if that entry is stale.

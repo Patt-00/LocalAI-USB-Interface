@@ -1,0 +1,26 @@
+# Models are intentionally uploaded separately by the repository owner.
+*.gguf
+*.GGUF
+
+# Compiled llama.cpp platform runtimes are not part of this interface snapshot.
+LocalAI/windows-*/
+LocalAI/macos-*/
+LocalAI/linux-*/
+LocalAI/android-arm64/
+LocalAI/android/localai-agent-android-arm64
+
+# Never commit device-local runtime state or credentials.
+LocalAI/logs/
+LocalAI/cache/
+*.log
+.env
+.env.*
+api-key
+session.token
+server.pid
+process.json
+
+# Removable-drive operating-system metadata.
+System Volume Information/
+.Spotlight-V100/
+.Trashes/
