@@ -1,0 +1,384 @@
+LOCALAI USB - COMPLETE REDMI / HYPEROS USER GUIDE
+=================================================
+
+This guide is for 64-bit ARM Redmi phones and tablets using USB OTG and
+Termux. It was written for the LocalAI USB in this drive.
+
+QUICK START FOR AN ALREADY-CONFIGURED REDMI
+--------------------------------------------
+1. Connect the LocalAI USB through a reliable USB OTG adapter.
+2. Cancel any request to format or erase the USB.
+3. Open Termux.
+4. Run:
+
+     ~/localai-start
+
+5. Wait for "LOCAL AI READY". The authenticated LocalAI page should open.
+6. When finished, return to Termux and run:
+
+     ~/localai-stop
+
+7. Wait for "It is safe to disconnect the USB", then eject/unplug it.
+
+Do not browse directly to a plain localhost page. Always use ~/localai-start;
+it opens a fresh authenticated link. A plain or old link can show a white
+screen, HTTP 403, HTTP 404, or Access Denied.
+
+
+1. WHAT THIS ANDROID VERSION DOES
+---------------------------------
+- The GGUF model remains on the USB. It is not silently copied to the Redmi.
+- About 123 MB of Android runtime, agent bridge, and web-interface files are
+  copied once into Termux-private storage because Android USB storage is noexec.
+- llama.cpp performs inference locally on the Redmi CPU and RAM.
+- The private services bind only to 127.0.0.1, not to the Wi-Fi/LAN.
+- Normal chat does not require an account, API key, cloud API, or internet.
+- Agent tools can read, write, search, and run commands only where Android and
+  Termux grant access. They cannot bypass Android, access other apps' private
+  data, use root-only files, or control every Android setting.
+
+
+2. REQUIREMENTS
+---------------
+- ARM64 Redmi/Android device. Check in Termux with: uname -m
+  The result must be aarch64 or arm64. A 32-bit device is unsupported.
+- USB OTG support and a reliable adapter/cable.
+- Android/HyperOS must recognize the exFAT USB without formatting it.
+- At least 8 GB RAM; 12 GB or more is strongly preferred for an 8B Q4 model.
+- Several hundred MB of free internal storage for Termux and the small runtime.
+- Termux installed from the official Termux F-Droid package or official Termux
+  GitHub project. Do not mix Termux/plugin packages from different sources.
+- Internet is needed only for the first Termux/package installation. After
+  setup, LocalAI inference is offline.
+- No root is required or expected.
+
+Official Termux locations:
+  https://f-droid.org/packages/com.termux/
+  https://github.com/termux/termux-app
+
+
+3. IMPORTANT: IF ANDROID ASKS TO FORMAT THE USB
+------------------------------------------------
+Press Cancel. Never format or erase this LocalAI USB.
+
+That message means the phone, adapter, power connection, or current Android
+storage service did not mount the exFAT volume correctly. Try these in order:
+1. Disconnect and reconnect the OTG adapter.
+2. Unlock the Redmi before connecting the USB.
+3. Open the Xiaomi/Android Files app and look for the LOCALAI USB.
+4. Try another known-good OTG adapter or powered USB hub.
+5. Reboot the Redmi and reconnect.
+6. Test the USB on a computer to confirm its files are still readable.
+
+Do not accept "Format", "Erase", or "Use as internal storage".
+
+
+4. ONE-TIME TERMUX PREPARATION
+------------------------------
+Install/open Termux, then run these commands while online:
+
+     pkg update
+     pkg install curl
+     termux-setup-storage
+
+Approve the Files/Media storage permission. If HyperOS shows a broader
+"Manage all files" option for Termux, enable it if available.
+
+On Redmi/HyperOS, menu names vary by version. Common locations are:
+  Settings > Apps > Manage apps > Termux > App permissions > Files and media
+  Settings > Apps > Manage apps > Termux > Battery saver > No restrictions
+
+After changing permissions, fully close and reopen Termux once.
+
+Verify the device architecture:
+
+     uname -m
+
+Continue only if it prints aarch64 or arm64.
+
+
+5. FIND THE USB PATH IN TERMUX
+------------------------------
+Android normally uses a volume ID such as 1234-ABCD, not the USB label, in its
+shell path. Do not type XXXX-XXXX literally.
+
+With the USB connected, run:
+
+     ls -la /storage
+     find /storage -maxdepth 4 -type f -iname '*.gguf' 2>/dev/null
+
+A working result looks similar to:
+
+  /storage/1234-ABCD/LocalAI/models/qwen3-8b-q4_K_M.gguf
+
+The USB root is therefore /storage/1234-ABCD in this example.
+
+Some Android versions expose the raw mount under /mnt/media_rw. You can check:
+
+     find /mnt/media_rw -maxdepth 4 -type f -iname '*.gguf' 2>/dev/null
+
+Permission Denied there is normal on many non-rooted phones. Prefer a readable
+/storage/... path.
+
+
+6. INSTALL LOCALAI INTO TERMUX ONCE
+-----------------------------------
+Replace 1234-ABCD below with the actual ID shown on your Redmi:
+
+     bash "/storage/1234-ABCD/LocalAI/android/setup-termux.sh"
+
+Successful setup prints:
+  LocalAI Termux runtime and agent bridge installed.
+  The GGUF model was NOT copied; it remains on the USB.
+  Start with: ~/localai-start
+
+Confirm the launchers exist:
+
+     ls -l ~/localai-start ~/localai-stop
+
+The installed Termux data is under ~/.localai-usb. The model is not there.
+
+IF TERMUX CAN READ THE MODEL BUT CANNOT RUN THE SETUP SCRIPT
+-----------------------------------------------------------
+External storage cannot execute programs directly. The command must begin with
+"bash" as shown above. Do not try ./setup-termux.sh.
+
+If Termux cannot even read the script path, use Android's Files app to build
+this temporary folder in Internal storage > Download:
+
+  LocalAI-Setup/
+    LocalAI/
+      android/             copy from USB LocalAI/android
+      android-arm64/       copy from USB LocalAI/android-arm64
+      web/                 copy from USB LocalAI/web
+      runtime/
+        model-selection.sh copy from USB LocalAI/runtime/model-selection.sh
+
+This temporary setup copy is about 123 MB and does not contain the model. Run:
+
+     bash ~/storage/downloads/LocalAI-Setup/LocalAI/android/setup-termux.sh
+
+After setup, ~/localai-start still searches /storage/* for the GGUF on USB.
+If Termux cannot read the GGUF itself, this fallback cannot fix that Android
+permission limitation.
+
+
+7. NORMAL OFFLINE USE
+---------------------
+Every time:
+1. Connect the USB and confirm it appears in the Android Files app.
+2. Open Termux.
+3. Run:
+
+     ~/localai-start
+
+4. Keep Termux running while the model loads. An 8B model can take time.
+5. Wait for all of these lines:
+     LOCAL AI READY
+     DO NOT REMOVE USB WHILE AI IS RUNNING
+     Model: ...
+     Context: ... tokens
+6. The browser should open automatically. Chat locally.
+7. Stop before ejecting:
+
+     ~/localai-stop
+
+The stop command targets only the LocalAI bridge and llama-server that this
+installation tracked. Do not unplug while it says the server is still running.
+
+
+8. IF THE BROWSER DOES NOT OPEN OR SHOWS WHITE/403/404
+------------------------------------------------------
+- Return to Termux and run ~/localai-start again. If LocalAI is already
+  running, this safely reopens a fresh authenticated browser link.
+- Do not manually reuse an old URL, API token, bookmark, or raw localhost page.
+- Close stale LocalAI browser tabs and use the newly opened tab.
+- Check current status in Termux:
+
+     curl -s http://127.0.0.1:8080/api/status
+
+- If the server did not start, inspect logs:
+
+     tail -n 60 ~/.localai-usb/agent-bridge.log
+     tail -n 80 ~/.localai-usb/llama-server.log
+
+- Then stop and retry:
+
+     ~/localai-stop
+     ~/localai-start
+
+Port 8080 is the authenticated interface/agent bridge. Port 8081 is the private
+llama-server behind it. Do not use port 8081 as the chat website.
+
+
+9. CHANGING OR SELECTING A MODEL
+-------------------------------
+Put compatible llama.cpp GGUF files in this single USB folder:
+
+  LocalAI/models/
+
+Do not place the model inside LocalAI/android or Termux-private storage.
+
+Automatic behavior:
+- One primary GGUF: selected automatically.
+- Several primary GGUFs: LocalAI uses LocalAI/models/default-model.txt when its
+  first line names a valid model relative to LocalAI/models.
+- Missing/stale preference: another usable primary GGUF is selected.
+- Files beginning with mmproj and secondary split shards are not selected as
+  the main text model.
+
+To choose a specific model for one start, pass its readable path:
+
+     ~/localai-start "/storage/1234-ABCD/LocalAI/models/model-name.gguf"
+
+Stop LocalAI before changing/removing a model file. Model compatibility and
+features depend on the GGUF and current llama.cpp runtime.
+
+
+10. CONTEXT SIZE AND MEMORY ON A 12 GB REDMI
+--------------------------------------------
+- 4096 tokens is the safest default for the included Qwen3 8B Q4 model.
+- 8192 may work on a 12 GB Redmi, but it consumes more RAM and can slow down or
+  cause Android to terminate the process when other apps use memory.
+- Very large context settings do not create more physical RAM.
+
+Use Settings > General > Context size in the LocalAI interface. The saved value
+is used on the next launch. Stop and restart LocalAI after changing it.
+
+You can also set the next-launch value directly in Termux, for example:
+
+     printf '%s\n' 4096 > ~/.localai-usb-context-size
+
+For stability, close heavy apps, keep several GB of RAM free, and start at 4096.
+
+
+11. PERFORMANCE AND HEAT
+------------------------
+- Android uses the official ARM64 CPU runtime. GPU offload is disabled in the
+  Android launcher for broad compatibility and predictable stability.
+- Keep Termux set to No restrictions under HyperOS battery settings.
+- Do not swipe Termux away from Recent apps while generating.
+- Lock Termux in Recent apps if your HyperOS version provides that option.
+- Long generations can heat the phone and trigger thermal throttling. Remove a
+  thick case, avoid direct sunlight, and pause if the device becomes too hot.
+- Charging while running adds heat. Use a safe charger and powered OTG hub when
+  the USB connection needs external power.
+- Shorter prompts/responses and 4096 context are faster and use less memory.
+
+
+12. AGENT TOOLS AND "ALWAYS ALLOW"
+-----------------------------------
+The web interface includes file and shell tools. In a chat, enable the desired
+Tools and choose either approval prompts or Always allow.
+
+Approval mode is safer because each operation is shown first. Always allow lets
+the model perform enabled operations without asking every time. Only use it in
+a directory whose files you can afford to modify, and review the selected tools.
+
+Android limits still apply. The agent can:
+- Run Termux shell commands.
+- Read/write files in Termux-private storage.
+- Access shared or USB files only when Android grants Termux that path.
+
+It cannot:
+- Gain root by itself.
+- Read another app's private storage.
+- Bypass HyperOS permissions or school/work device policy.
+- Open every Android application or control the entire operating system.
+- Search the web unless a separate network-enabled tool is installed and
+  configured. No web-search/cloud tool is bundled here.
+
+
+13. IMAGES, PDF, DOCX, AND OTHER UPLOADS
+----------------------------------------
+- Images require a vision-capable main GGUF and its matching mmproj file. Put
+  the mmproj beside the model. A text-only model cannot understand images.
+- PDF/DOCX text extraction is an interface feature and may work for ordinary
+  text documents. Scanned/image-only pages require OCR or a vision model.
+- Tool use, vision, document support, reasoning, and code quality still depend
+  on the loaded model. The interface cannot add intelligence absent from it.
+
+
+14. TROUBLESHOOTING
+-------------------
+
+"No such file or directory"
+  Run the find command in section 5. Use the real volume ID and quote the full
+  path. Do not type XXXX-XXXX literally.
+
+"Termux cannot find a readable primary GGUF"
+  Confirm the Files app sees the USB and a .gguf exists in LocalAI/models. Run:
+    find /storage -maxdepth 4 -type f -iname '*.gguf' 2>/dev/null
+  If nothing appears, Android is not granting Termux direct USB access. LocalAI
+  will not silently copy the model. Recheck Files/Media permission, reconnect,
+  restart Termux, and retry. Some Android builds allow USB only through the
+  Storage Access Framework used by file-manager apps; ordinary Termux commands
+  cannot bypass that restriction without copying the model.
+
+"Permission denied"
+  Run termux-setup-storage again, grant Files/Media access in HyperOS Settings,
+  close Termux completely, reopen it, and retry. External storage is noexec, so
+  setup must be invoked with bash.
+
+"llama-server stopped while loading" or Android closes Termux
+  Use 4096 context, close other apps, set Termux battery use to No restrictions,
+  and make sure the selected model fits available RAM. Check llama-server.log.
+
+"Template endpoint returned HTTP 403" / "Access Denied"
+  The browser tab has an old/missing session token. Run ~/localai-start again
+  and use the newly opened tab.
+
+HTTP 404 or white page
+  The bridge may be stopped, still loading, or the wrong URL/port was opened.
+  Start from Termux and wait for LOCAL AI READY.
+
+The USB disconnects during inference
+  Stop LocalAI, check the OTG adapter and power, reconnect, verify the model path,
+  then restart. Never remove the USB while the server is reading the GGUF.
+
+Model gives text instead of calling tools
+  Enable the tools in the chat and use a model with reliable tool/function-call
+  behavior. Small or base models may ignore tools even when the interface offers
+  them. Start a fresh chat after changing models.
+
+
+15. UPDATE OR REINSTALL THE TERMUX RUNTIME
+-------------------------------------------
+When USB interface/runtime files are updated:
+1. Stop LocalAI: ~/localai-stop
+2. Reconnect the updated USB.
+3. Run setup again from its current USB path:
+
+     bash "/storage/1234-ABCD/LocalAI/android/setup-termux.sh"
+
+This refreshes the small runtime, agent bridge, model selector, web UI, and
+launchers in Termux. It does not copy or alter the GGUF model.
+
+
+16. PRIVACY AND SAFE USE
+------------------------
+- Inference stays on the Redmi unless you deliberately add an external network
+  tool or upload information elsewhere.
+- The local server listens only on 127.0.0.1.
+- The API/session token only protects the local browser/agent session. Do not
+  publish or reuse it; each launch manages its own session.
+- Agent commands can delete or overwrite files that Termux can access. Keep
+  approval enabled for unfamiliar models and maintain backups of important data.
+- Always stop LocalAI before ejecting the USB.
+
+
+COMMAND QUICK REFERENCE
+-----------------------
+First-time storage permission:  termux-setup-storage
+Find USB models:                find /storage -maxdepth 4 -type f -iname '*.gguf' 2>/dev/null
+Install from USB:               bash "/storage/ID/LocalAI/android/setup-termux.sh"
+Start:                          ~/localai-start
+Start a specific model:         ~/localai-start "/storage/ID/LocalAI/models/model.gguf"
+Stop safely:                    ~/localai-stop
+Check status:                   curl -s http://127.0.0.1:8080/api/status
+Bridge log:                     tail -n 60 ~/.localai-usb/agent-bridge.log
+Model/server log:               tail -n 80 ~/.localai-usb/llama-server.log
+
+The same GGUF can be shared by Android, Windows, macOS, and Linux. Each system
+uses its own llama.cpp runtime. The USB stores the model; the connected device's
+CPU and RAM perform the AI calculations.

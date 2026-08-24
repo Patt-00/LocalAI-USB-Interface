@@ -1,6 +1,10 @@
 ANDROID ARM64 / USB OTG / TERMUX
 ================================
 
+For the complete Redmi/HyperOS walkthrough, open this file at the USB root:
+
+  ANDROID REDMI GUIDE.txt
+
 Requirements
 ------------
 - A 64-bit ARM Android phone or tablet. 32-bit Android is unsupported.
@@ -26,13 +30,10 @@ One-time setup
 
      bash /storage/XXXX-XXXX/LocalAI/android/setup-termux.sh
 
-   If Termux cannot see that script, use Android's Files app to copy only the
-   small LocalAI/android folder into Downloads, then run:
-
-     bash ~/storage/downloads/android/setup-termux.sh
-
-   Do not copy the model. The launcher separately checks whether Android grants
-   Termux direct read access to the GGUF on the USB and stops if it does not.
+   If Termux cannot see that script, follow the internal-Download fallback in
+   ANDROID REDMI GUIDE.txt. The fallback needs Android runtime, web interface,
+   and model-selector support files in addition to LocalAI/android. It never
+   requires copying the GGUF model.
 
 3. Setup creates two simple commands in your Termux home:
 
